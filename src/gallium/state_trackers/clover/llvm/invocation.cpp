@@ -225,8 +225,6 @@ namespace {
             bool internalize_symbols) {
       compat::pass_manager pm;
 
-      compat::add_data_layout_pass(pm);
-
       // By default, the function internalizer pass will look for a function
       // called "main" and then mark all other functions as internal.  Marking
       // functions as internal enables the optimizer to perform optimizations
