@@ -33,12 +33,15 @@ namespace clover {
       module compile_program(const std::string &source,
                              const header_map &headers,
                              const std::string &target,
+                             const std::string &opencl_version,
+                             const std::string &opencl_c_version,
                              const std::string &opts,
                              std::string &r_log);
 
       module link_program(const std::vector<module> &modules,
                           enum pipe_shader_ir ir,
                           const std::string &target,
+                          const std::string &opencl_c_version,
                           const std::string &opts,
                           std::string &r_log);
    }

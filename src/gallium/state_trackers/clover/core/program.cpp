@@ -54,7 +54,10 @@ program::compile(const ref_vector<device> &devs, const std::string &opts,
             const module m = (dev.ir_format() == PIPE_SHADER_IR_TGSI ?
                               tgsi::compile_program(_source, log) :
                               llvm::compile_program(_source, headers,
-                                                    dev.ir_target(), opts, log));
+                                                    dev.ir_target(),
+                                                    dev.device_version(),
+                                                    dev.device_clc_version(),
+                                                    opts, log));
             _builds[&dev] = { m, opts, log };
          } catch (...) {
             _builds[&dev] = { module(), opts, log };
@@ -79,7 +82,9 @@ program::link(const ref_vector<device> &devs, const std::string &opts,
          const module m = (dev.ir_format() == PIPE_SHADER_IR_TGSI ?
                            tgsi::link_program(ms) :
                            llvm::link_program(ms, dev.ir_format(),
-                                              dev.ir_target(), opts, log));
+                                              dev.ir_target(),
+                                              dev.device_clc_version(),
+                                              opts, log));
          _builds[&dev] = { m, opts, log };
       } catch (...) {
          _builds[&dev] = { module(), opts, log };

@@ -53,7 +53,6 @@
 #include "llvm/util.hpp"
 #include "util/algorithm.hpp"
 
-
 using namespace clover;
 using namespace clover::llvm;
 
@@ -94,7 +93,7 @@ namespace {
    }
 
    std::unique_ptr<clang::CompilerInstance>
-   create_compiler_instance(const target &target,
+   create_compiler_instance(const target &target, std::string opencl_c_version,
                             const std::vector<std::string> &opts,
                             std::string &r_log) {
       std::unique_ptr<clang::CompilerInstance> c { new clang::CompilerInstance };
@@ -125,10 +124,22 @@ namespace {
       // http://www.llvm.org/bugs/show_bug.cgi?id=19735
       c->getDiagnosticOpts().ShowCarets = false;
 
+      clang::LangStandard::Kind lang_kind;
+      if (opencl_c_version == "1.0")
+         lang_kind = compat::lang_opencl10;
+      else if (opencl_c_version == "1.1")
+         lang_kind = clang::LangStandard::lang_opencl11;
+      else if (opencl_c_version == "1.2")
+         lang_kind = clang::LangStandard::lang_opencl12;
+      else if (opencl_c_version == "2.0")
+         lang_kind = clang::LangStandard::lang_opencl20;
+      else
+         invalid_build_options_error("Invalid OpenCL version string: " +
+                                     opencl_c_version);
+
       compat::set_lang_defaults(c->getInvocation(), c->getLangOpts(),
                                 compat::ik_opencl, ::llvm::Triple(target.triple),
-                                c->getPreprocessorOpts(),
-                                clang::LangStandard::lang_opencl11);
+                                c->getPreprocessorOpts(), lang_kind);
 
       c->createDiagnostics(new clang::TextDiagnosticPrinter(
                               *new raw_string_ostream(r_log),
@@ -144,7 +155,8 @@ namespace {
    compile(LLVMContext &ctx, clang::CompilerInstance &c,
            const std::string &name, const std::string &source,
            const header_map &headers, const std::string &target,
-           const std::string &opts, std::string &r_log) {
+           const std::string &opencl_version, const std::string &opts,
+           std::string &r_log) {
       c.getFrontendOpts().ProgramAction = clang::frontend::EmitLLVMOnly;
       c.getHeaderSearchOpts().UseBuiltinIncludes = true;
       c.getHeaderSearchOpts().UseStandardSystemIncludes = true;
@@ -159,7 +171,16 @@ namespace {
       c.getPreprocessorOpts().Includes.push_back("clc/clc.h");
 
       // Add definition for the OpenCL version
-      c.getPreprocessorOpts().addMacroDef("__OPENCL_VERSION__=110");
+      auto ocl_version_major_minor = tokenize(opencl_version, '.');
+      if (ocl_version_major_minor.size() != 2) {
+         invalid_build_options_error("Invalid OpenCL version string: " +
+                                     opencl_version);
+      }
+      int ocl_version_major = stoi(ocl_version_major_minor[0]);
+      int ocl_version_minor = stoi(ocl_version_major_minor[1]);
+      int ocl_version_number = ocl_version_major * 100 + ocl_version_minor * 10;
+      c.getPreprocessorOpts().addMacroDef("__OPENCL_VERSION__=" +
+                                          std::to_string(ocl_version_number));
 
       // clc.h requires that this macro be defined:
       c.getPreprocessorOpts().addMacroDef("cl_clang_storage_class_specifiers");
@@ -202,16 +223,18 @@ module
 clover::llvm::compile_program(const std::string &source,
                               const header_map &headers,
                               const std::string &target,
+                              const std::string &opencl_version,
+                              const std::string &opencl_c_version,
                               const std::string &opts,
                               std::string &r_log) {
    if (has_flag(debug::clc))
       debug::log(".cl", "// Options: " + opts + '\n' + source);
 
    auto ctx = create_context(r_log);
-   auto c = create_compiler_instance(target, tokenize(opts + " input.cl"),
-                                     r_log);
-   auto mod = compile(*ctx, *c, "input.cl", source, headers, target, opts,
-                      r_log);
+   auto c = create_compiler_instance(target, opencl_c_version,
+                                     tokenize(opts + " input.cl"), r_log);
+   auto mod = compile(*ctx, *c, "input.cl", source, headers, target, opencl_version,
+                      opts, r_log);
 
    if (has_flag(debug::llvm))
       debug::log(".ll", print_module_bitcode(*mod));
@@ -270,13 +293,14 @@ namespace {
 module
 clover::llvm::link_program(const std::vector<module> &modules,
                            enum pipe_shader_ir ir, const std::string &target,
+                           const std::string &opencl_c_version,
                            const std::string &opts, std::string &r_log) {
    std::vector<std::string> options = tokenize(opts + " input.cl");
    const bool create_library = count("-create-library", options);
    erase_if(equals("-create-library"), options);
 
    auto ctx = create_context(r_log);
-   auto c = create_compiler_instance(target, options, r_log);
+   auto c = create_compiler_instance(target, opencl_c_version, options, r_log);
    auto mod = link(*ctx, *c, modules, r_log);
 
    optimize(*mod, c->getCodeGenOpts().OptimizationLevel, !create_library);

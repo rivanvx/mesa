@@ -94,6 +94,8 @@ namespace clover {
    private:
       pipe_screen *pipe;
       pipe_loader_device *ldev;
+      std::string version;
+      std::string clc_version;
    };
 }
 

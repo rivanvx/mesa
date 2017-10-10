@@ -50,7 +50,7 @@ clover::GetPlatformInfo(cl_platform_id d_platform, cl_platform_info param,
                         size_t size, void *r_buf, size_t *r_size) try {
    property_buffer buf { r_buf, size, r_size };
 
-   obj(d_platform);
+   auto &platform = obj(d_platform);
 
    switch (param) {
    case CL_PLATFORM_PROFILE:
@@ -58,7 +58,7 @@ clover::GetPlatformInfo(cl_platform_id d_platform, cl_platform_info param,
       break;
 
    case CL_PLATFORM_VERSION:
-      buf.as_string() = "OpenCL 1.1 Mesa " PACKAGE_VERSION
+      buf.as_string() = "OpenCL " + platform.platform_version() + " Mesa " PACKAGE_VERSION
 #ifdef MESA_GIT_SHA1
                         " (" MESA_GIT_SHA1 ")"
 #endif

@@ -21,6 +21,7 @@
 //
 
 #include "core/platform.hpp"
+#include "util/u_debug.h"
 
 using namespace clover;
 
@@ -38,4 +39,12 @@ platform::platform() : adaptor_range(evals(), devs) {
          pipe_loader_release(&ldev, 1);
       }
    }
+
+   const std::string cl_version_override =
+                             debug_get_option("CLOVER_CL_VERSION_OVERRIDE", "");
+   version = !cl_version_override.empty() ? cl_version_override : "1.1";
+}
+
+std::string platform::platform_version() {
+    return version;
 }

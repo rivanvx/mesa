@@ -59,6 +59,7 @@
 #include <clang/Basic/TargetInfo.h>
 #include <clang/Frontend/CodeGenOptions.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/LangStandard.h>
 
 namespace clover {
    namespace llvm {
@@ -75,6 +76,12 @@ namespace clover {
 #else
          const auto lang_as_offset = clang::LangAS::Offset;
          const clang::InputKind ik_opencl = clang::IK_OpenCL;
+#endif
+
+#if HAVE_LLVM >= 0x0500
+         const clang::LangStandard::Kind lang_opencl10 = clang::LangStandard::lang_opencl10;
+#else
+         const clang::LangStandard::Kind lang_opencl10 = clang::LangStandard::lang_opencl;
 #endif
 
          inline void

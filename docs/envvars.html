@@ -274,6 +274,13 @@ See src/mesa/state_tracker/st_debug.c for other options.
 <li>CLOVER_EXTRA_LINK_OPTIONS - allows specifying additional linker
     options. Specified options are appended after the options set by the OpenCL
     program in clLinkProgram.
+<li>CLOVER_CL_VERSION_OVERRIDE - allows overriding OpenCL version returned by
+    clGetPlatformInfo(CL_PLATFORM_VERSION) and
+    clGetDeviceInfo(CL_DEVICE_VERSION). Note that the setting sets the version
+    of the platform and all the devices to the same value.
+<li>CLOVER_CL_C_VERSION_OVERRIDE - allows overriding OpenCL C version reported
+    by clGetDeviceInfo(CL_DEVICE_OPENCL_C_VERSION) and the value of the
+    __OPENCL_VERSION__ macro in the OpenCL compiler.
 </ul>
 
 

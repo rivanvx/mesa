@@ -25,6 +25,7 @@
 #include "core/platform.hpp"
 #include "pipe/p_screen.h"
 #include "pipe/p_state.h"
+#include "util/u_debug.h"
 
 using namespace clover;
 
@@ -49,6 +50,14 @@ device::device(clover::platform &platform, pipe_loader_device *ldev) :
          pipe->destroy(pipe);
       throw error(CL_INVALID_DEVICE);
    }
+
+   const std::string cl_version_override =
+                             debug_get_option("CLOVER_CL_VERSION_OVERRIDE", "");
+   version = !cl_version_override.empty() ? cl_version_override : "1.1";
+
+   const std::string clc_version_override =
+                           debug_get_option("CLOVER_CL_C_VERSION_OVERRIDE", "");
+   clc_version = !clc_version_override.empty() ? clc_version_override : "1.1";
 }
 
 device::~device() {
@@ -261,10 +270,10 @@ device::endianness() const {
 
 std::string
 device::device_version() const {
-    return "1.1";
+    return version;
 }
 
 std::string
 device::device_clc_version() const {
-    return "1.1";
+    return clc_version;
 }

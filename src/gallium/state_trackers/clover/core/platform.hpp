@@ -40,8 +40,10 @@ namespace clover {
       platform &
       operator=(const platform &platform) = delete;
 
+      std::string platform_version();
    protected:
       std::vector<intrusive_ref<device>> devs;
+      std::string version;
    };
 }
 

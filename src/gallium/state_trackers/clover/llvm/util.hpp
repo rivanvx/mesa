@@ -41,7 +41,7 @@ namespace clover {
       }
 
       inline std::vector<std::string>
-      tokenize(const std::string &s) {
+      tokenize(const std::string &s, const char sep = ' ') {
          std::vector<std::string> ss;
          std::ostringstream oss;
 
@@ -66,7 +66,7 @@ namespace clover {
                in_quote_double = !in_quote_double;
             } else if (c == '\'' && !in_quote_double) {
                in_quote_single = !in_quote_single;
-            } else if (c != ' ' || in_quote_single || in_quote_double) {
+            } else if (c != sep || in_quote_single || in_quote_double) {
                oss.put(c);
             } else if (oss.tellp() > 0) {
                ss.emplace_back(oss.str());
